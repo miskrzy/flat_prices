@@ -47,3 +47,8 @@ resource "aws_lambda_function" "python_scraping_lambda" {
     }
   }
 }
+
+resource "aws_lambda_function_url" "python_scraping_lambda_url" {
+  function_name      = aws_lambda_function.python_scraping_lambda.function_name
+  authorization_type = "AWS_IAM"
+}
