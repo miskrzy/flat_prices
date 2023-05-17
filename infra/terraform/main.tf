@@ -44,10 +44,22 @@ resource "aws_iam_role" "iam_role_for_lambda" {
 
 
 # Python lambda
+resource "null_resource" "python_scraping_lambda_dependencies" {
+  provisioner "local-exec" {
+    command = "pip install -r ${local.path_to_application}/python/scraping_lambda/requirements.txt -t ${local.path_to_application}/python/scraping_lambda/app"
+  }
+
+  triggers = {
+    requirements = filemd5("${local.path_to_application}/python/scraping_lambda/requirements.txt")
+  }
+}
+
 data "archive_file" "python_scraping_lambda_zip" {
   type        = "zip"
-  source_dir  = "${local.path_to_application}/python/scraping_lambda"
+  source_dir  = "${local.path_to_application}/python/scraping_lambda/app"
   output_path = "hello_lambda.zip"
+
+  depends_on = [null_resource.python_scraping_lambda_dependencies]
 }
 
 resource "aws_lambda_function" "python_scraping_lambda" {
