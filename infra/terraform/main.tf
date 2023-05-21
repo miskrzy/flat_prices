@@ -21,12 +21,6 @@ data "aws_iam_policy_document" "lambda_trust_policy" {
 data "aws_iam_policy_document" "lambda_policy" {
   statement {
     effect    = "Allow"
-    actions   = ["logs:CreateLogGroup"]
-    resources = ["arn:aws:logs:${local.region}:${local.account_id}:*"]
-  }
-
-  statement {
-    effect    = "Allow"
     actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
     resources = ["arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/*:*"]
   }
@@ -44,22 +38,15 @@ resource "aws_iam_role" "iam_role_for_lambda" {
 
 
 # Python lambda
-resource "null_resource" "python_scraping_lambda_dependencies" {
-  provisioner "local-exec" {
-    command = "pip install -r ${local.path_to_application}/python/scraping_lambda/requirements.txt -t ${local.path_to_application}/python/scraping_lambda/app"
-  }
-
-  triggers = {
-    requirements = filemd5("${local.path_to_application}/python/scraping_lambda/requirements.txt")
-  }
-}
-
 data "archive_file" "python_scraping_lambda_zip" {
   type        = "zip"
-  source_dir  = "${local.path_to_application}/python/scraping_lambda/app"
-  output_path = "hello_lambda.zip"
+  source_dir  = "${local.path_to_python_scraping_lambda}/build"
+  output_path = "${local.path_to_python_scraping_lambda}/python_scraping_lambda.zip"
+}
 
-  depends_on = [null_resource.python_scraping_lambda_dependencies]
+resource "aws_cloudwatch_log_group" "python_scraping_lambda" {
+  name              = "/aws/lambda/${local.resource_prefix}-python-scraping-lambda"
+  retention_in_days = 14
 }
 
 resource "aws_lambda_function" "python_scraping_lambda" {

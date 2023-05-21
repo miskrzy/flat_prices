@@ -9,7 +9,7 @@ python 3.10.11
 # TODOs
 Adding scheduled triggers to lambdas (CloudWatch based)
 
-Adding sending logs to CloudWatch (after some logging exists) (done but still need to check cloudwatch settings for log retention, pricing etc.)
+Adding sending logs to CloudWatch (after some logging exists) (done)
 
 Saving some jsons to S3
 
