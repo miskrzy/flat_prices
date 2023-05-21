@@ -36,3 +36,6 @@ terraform.rc
 
 ## Python
 /venv/
+.env
+.zip
+**/build/

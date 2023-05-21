@@ -18,17 +18,35 @@ data "aws_iam_policy_document" "lambda_trust_policy" {
   }
 }
 
+data "aws_iam_policy_document" "lambda_policy" {
+  statement {
+    effect    = "Allow"
+    actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+    resources = ["arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/*:*"]
+  }
+}
+
 resource "aws_iam_role" "iam_role_for_lambda" {
   name               = "${local.resource_prefix}-iam-role-for-lambda"
   assume_role_policy = data.aws_iam_policy_document.lambda_trust_policy.json
+
+  inline_policy {
+    name   = "${local.resource_prefix}-lambda-policy"
+    policy = data.aws_iam_policy_document.lambda_policy.json
+  }
 }
 
 
 # Python lambda
 data "archive_file" "python_scraping_lambda_zip" {
   type        = "zip"
-  source_dir = "${local.path_to_application}/python/scraping_lambda"
-  output_path = "hello_lambda.zip"
+  source_dir  = "${local.path_to_python_scraping_lambda}/build"
+  output_path = "${local.path_to_python_scraping_lambda}/python_scraping_lambda.zip"
+}
+
+resource "aws_cloudwatch_log_group" "python_scraping_lambda" {
+  name              = "/aws/lambda/${local.resource_prefix}-python-scraping-lambda"
+  retention_in_days = 14
 }
 
 resource "aws_lambda_function" "python_scraping_lambda" {
